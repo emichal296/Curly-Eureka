@@ -127,7 +127,26 @@ const QUESTIONS=[
 function initMovie(){movieQuestions=QUESTIONS.slice().sort(()=>Math.random()-.5).slice(0,5);movieIndex=0;movieAnswered=false;movieOver=false;setScore(0);resizeCanvas(520,520);$("#pauseBtn").classList.add("hidden");say("Choose the correct answer in each movie trivia round.");drawMovie()}
 function drawMovie(){clearCanvas();if(movieOver){drawText("QUIZ COMPLETE!",260,180,30,"#4de6e1");drawText(`Final score: ${score} / 50`,260,235,22);drawText("Press Restart to play a new round",260,290,16,"#aeb7df");return}const q=movieQuestions[movieIndex];drawText("MOVIE MANIA",260,50,22,"#ff6eaa");drawText(`QUESTION ${movieIndex+1} OF ${movieQuestions.length}`,260,90,14,"#aeb7df");wrapText(q.q,260,145,440,27);q.a.forEach((a,i)=>{const y=235+i*72;roundedRect(45,y,430,52,12,movieAnswered?(i===q.correct?"#1d654e":"#262d54"):"#23294e");drawText(`${i+1}.  ${a}`,260,y+33,18)});drawText("Tap an answer (or press 1, 2, or 3)",260,480,13,"#aeb7df")}
 function wrapText(text,x,y,maxWidth,lineHeight){ctx.fillStyle="#f5f7ff";ctx.font="800 21px system-ui";ctx.textAlign="center";let words=text.split(" "),line="",lines=[];for(const word of words){const test=line+word+" ";if(ctx.measureText(test).width>maxWidth&&line){lines.push(line.trim());line=word+" "}else line=test}if(line)lines.push(line.trim());lines.forEach((l,i)=>ctx.fillText(l,x,y+i*lineHeight))}
-function movieClick(e){if(movieOver||movieAnswered)return;const r=canvas.getBoundingClientRect(),y=(e.clientY-r.top)*canvas.height/r.height;if(y<220)return;const idx=Math.floor((y-235)/72);answerMovie(idx)}
+
+function movieClick(e) {
+  if (movieOver || movieAnswered) return;
+
+  const r = canvas.getBoundingClientRect();
+  const x = (e.clientX - r.left) * canvas.width / r.width;
+  const y = (e.clientY - r.top) * canvas.height / r.height;
+
+  // Only accept clicks inside an actual answer button.
+  for (let i = 0; i < 3; i++) {
+    const top = 235 + i * 72;
+
+    if (x >= 45 && x <= 475 &&
+        y >= top && y <= top + 52) {
+      answerMovie(i);
+      return;
+    }
+  }
+}
+
 function answerMovie(idx){if(movieOver||movieAnswered||idx<0||idx>2)return;movieAnswered=true;const q=movieQuestions[movieIndex];if(idx===q.correct){setScore(score+10);say("Correct! +10 points.");}else say(`Not quite! The answer was ${q.a[q.correct]}.`);drawMovie();setTimeout(()=>{if(mode!=="movie")return;movieIndex++;movieAnswered=false;if(movieIndex>=movieQuestions.length){movieOver=true;say("Quiz complete! Restart for another set of questions.");}drawMovie()},850)}
 window.addEventListener("keydown",e=>{if(mode==="movie"&&["1","2","3"].includes(e.key))answerMovie(Number(e.key)-1)});
 function draw(){if(mode==="puzzle")drawPuzzle();else if(mode==="breaker")drawBreaker();else drawMovie()}
